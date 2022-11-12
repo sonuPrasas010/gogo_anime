@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "953112515942",
+    "project_id": "gogoanime-watch-anime-online",
+    "storage_bucket": "gogoanime-watch-anime-online.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:953112515942:android:982bf3ba1eb9b1bc3164a7",
+        "android_client_info": {
+          "package_name": "com.godevs.gogo_anime"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "953112515942-ikd06eu890odfal2s58c0galb8dmv7ns.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPwFdn6WvXe10CgwV1hYUkWgWeqlKv0w4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "953112515942-ikd06eu890odfal2s58c0galb8dmv7ns.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:953112515942:android:ac4d16efca32e5a43164a7",
+        "android_client_info": {
+          "package_name": "com.godevs.yts_movie_downloader"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "953112515942-ikd06eu890odfal2s58c0galb8dmv7ns.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPwFdn6WvXe10CgwV1hYUkWgWeqlKv0w4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "953112515942-ikd06eu890odfal2s58c0galb8dmv7ns.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
