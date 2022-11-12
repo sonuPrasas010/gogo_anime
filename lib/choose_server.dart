@@ -9,6 +9,7 @@ import 'package:new_gogo_anime/admob/facebook_ads.dart';
 import 'package:new_gogo_anime/admob/unity_ads.dart';
 import 'package:new_gogo_anime/categories.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unity_mediation/unity_mediation.dart';
 
 import 'consts.dart';
@@ -18,8 +19,11 @@ import 'services/DataFetcher.dart';
 import 'video.dart';
 
 class ChooseServer extends StatefulWidget {
-  final String url, imageUrl;
-  const ChooseServer(this.url, this.imageUrl, {Key? key}) : super(key: key);
+  final String url, imageUrl, currentEpisode, name;
+  final int maxEpisode;
+  const ChooseServer(this.url, this.imageUrl, this.name,
+      {required this.currentEpisode, required this.maxEpisode, Key? key})
+      : super(key: key);
 
   @override
   State<ChooseServer> createState() => _ChooseServerState();
@@ -32,13 +36,17 @@ class _ChooseServerState extends State<ChooseServer> {
   bool _isLoading = true;
   int rewardRequestedTime = 0;
   bool isRewardedAdLoading = false;
+  int currentEp = 0;
+  late SharedPreferences _sharedPreferences;
 
   void increaseRequestTime() => rewardRequestedTime++;
 
   @override
   void initState() {
+    currentEp = int.parse(widget.currentEpisode);
     _streamController = StreamController();
     fetchVideo();
+    saveToPrefs();
     UnityAds.showAd();
     super.initState();
     _streamController.stream.listen((data) {
@@ -103,6 +111,12 @@ class _ChooseServerState extends State<ChooseServer> {
     super.dispose();
   }
 
+  void saveToPrefs() async {
+    _sharedPreferences = await SharedPreferences.getInstance();
+    _sharedPreferences.setBool(widget.url, true);
+    log("saved to prefs");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,82 +126,221 @@ class _ChooseServerState extends State<ChooseServer> {
         elevation: 0,
       ),
       body: Container(
+        width: double.maxFinite,
         decoration: BoxDecoration(
           image: DecorationImage(
             image: NetworkImage(widget.imageUrl),
             fit: BoxFit.cover,
           ),
         ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            color: Colors.black.withOpacity(0.3),
-            child: _isLoading
-                ? const Center(
-                    child: CupertinoActivityIndicator(
-                      // strokeWidth: 1,
-                      radius: 12,
-                      color: Colors.white,
+        child: Container(
+          color: Colors.black.withOpacity(0.85),
+          child: _isLoading
+              ? const Center(
+                  child: CupertinoActivityIndicator(
+                    // strokeWidth: 1,
+                    radius: 12,
+                    color: Colors.white,
+                  ),
+                )
+              : Column(
+                  children: [
+                    const SizedBox(
+                      height: 10,
                     ),
-                  )
-                : ListView.separated(
-                    separatorBuilder: ((context, index) {
-                      // if (index == 3) {
-                      //   return FacebookNativeAd(
-                      //     placementId: "600792398257188_600792468257181",
-                      //     adType: NativeAdType.NATIVE_AD,
-                      //     width: double.infinity,
-                      //     height: 300,
-                      //     backgroundColor: Colors.blue,
-                      //     titleColor: Colors.white,
-                      //     descriptionColor: Colors.white,
-                      //     buttonColor: Colors.deepPurple,
-                      //     buttonTitleColor: Colors.white,
-                      //     buttonBorderColor: Colors.white,
-                      //     listener: (result, value) {
-                      //       print("Native Ad: $result --> $value");
-                      //     },
-                      //     keepExpandedWhileLoading: false,
-                      //     expandAnimationDuraion: 1000,
-                      //   );
-                      // }
-                      return const Divider();
-                    }),
-                    itemCount: servers.length,
-                    itemBuilder: (_, index) => MaterialButton(
-                      highlightColor: Colors.transparent,
-                      splashColor: Colors.transparent,
-                      onPressed: () async {
-                        var packageInfo = await PackageInfo.fromPlatform();
-                        if (servers[index]['name'] == "Download") {                          
-                          Functionality.launchUniversalLinkIos(
-                              defaultUrl: servers[index]['url'] +
-                                  "&package=${packageInfo.packageName}&version=${packageInfo.version}");
-                          return;
-                        }
-                        if (mounted) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => VideoPlayer(
-                                servers[index]['url'] ??
-                                    "https://tormovie.online/404",
-                              ),
-                            ),
-                          );
-                        }
-                        debugPrint(servers[index]['url']);
-                      },
-                      child: Text(
-                        servers[index]['name'] ?? "",
-                        style: const TextStyle(
-                          color: TEXT_COLOR,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400,
-                        ),
+                    Text(
+                      "${widget.name} (Episode ${widget.currentEpisode})",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18,
                       ),
                     ),
-                  ),
-          ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                        ),
+                        if (currentEp != 1)
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                  primary: _sharedPreferences
+                                              .getBool(widget.url.replaceAll(
+                                            "-episode-$currentEp",
+                                            "-episode-${currentEp - 1}",
+                                          )) ==
+                                          true
+                                      ? Colors.green
+                                      : Theme.of(context).primaryColor),
+                              onPressed: () {
+                                var url = widget.url.replaceAll(
+                                    "-episode-$currentEp",
+                                    "-episode-${currentEp - 1}");
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ChooseServer(
+                                        url,
+                                        widget.imageUrl,
+                                        widget.name,
+                                        currentEpisode:
+                                            (currentEp - 1).toString(),
+                                        maxEpisode: widget.maxEpisode,
+                                      ),
+                                    ));
+                              },
+                              icon: const Icon(
+                                Icons.keyboard_double_arrow_left,
+                              ),
+                              label: const Text("prev"),
+                            ),
+                          ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        if (currentEp != widget.maxEpisode)
+                          Expanded(
+                            child: Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  primary: _sharedPreferences
+                                              .getBool(widget.url.replaceAll(
+                                            "-episode-$currentEp",
+                                            "-episode-${currentEp + 1}",
+                                          )) ==
+                                          true
+                                      ? Colors.green
+                                      : Theme.of(context).primaryColor,
+                                ),
+                                onPressed: () {
+                                  var url = widget.url.replaceAll(
+                                      "-episode-$currentEp",
+                                      "-episode-${currentEp + 1}");
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ChooseServer(
+                                        url,
+                                        widget.imageUrl,
+                                        widget.name,
+                                        currentEpisode:
+                                            (currentEp + 1).toString(),
+                                        maxEpisode: widget.maxEpisode,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.keyboard_double_arrow_right,
+                                ),
+                                label: const Text("Next"),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(
+                          width: 20,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 50,
+                    ),
+                    for (var index = 0; index < servers.length; index++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 2,
+                          horizontal: 15,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            5,
+                          ),
+                          child: MaterialButton(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 8,
+                            ),
+                            highlightColor: Colors.green,
+                            splashColor: Colors.white,
+                            hoverColor: Colors.green,
+                            focusColor: Colors.green,
+                            color: Colors.black,
+                            onPressed: () async {
+                              var packageInfo =
+                                  await PackageInfo.fromPlatform();
+                              if (servers[index]['name'] == "Download") {
+                                Functionality.launchUniversalLinkIos(
+                                    defaultUrl: servers[index]['url'] +
+                                        "&package=${packageInfo.packageName}&version=${packageInfo.version}");
+                                return;
+                              }
+                              if (mounted) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => VideoPlayer(
+                                      servers[index]['url'] ??
+                                          "https://tormovie.online/404",
+                                    ),
+                                  ),
+                                );
+                              }
+                              debugPrint(servers[index]['url']);
+                            },
+                            child: Row(
+                              children: [
+                                if (servers[index]['name'] != "Download")
+                                  const Icon(
+                                    Icons.play_circle_outline_rounded,
+                                    color: Colors.white,
+                                  )
+                                else
+                                  const Icon(
+                                    Icons.downloading,
+                                    color: Colors.white,
+                                  ),
+                                const Spacer(
+                                  flex: 1,
+                                ),
+                                Text(
+                                  servers[index]['name'] ?? "",
+                                  style: const TextStyle(
+                                    color: TEXT_COLOR,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                const Spacer(
+                                  flex: 3,
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                      color: Colors.blue,
+                                      borderRadius: BorderRadius.circular(5)),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                    horizontal: 15,
+                                  ),
+                                  child: Text(
+                                    servers[index]['name'] != "Download"
+                                        ? "Watch"
+                                        : "Download",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
         ),
       ),
     );
@@ -195,6 +348,7 @@ class _ChooseServerState extends State<ChooseServer> {
 
   Future<void> fetchVideo() async {
     debugPrint("${widget.url}&package_name=$packageName&version=$buildNumber");
+
     setState(() {
       _isLoading = true;
     });

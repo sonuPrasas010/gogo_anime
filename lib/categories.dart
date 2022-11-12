@@ -317,7 +317,7 @@ class _CategoriesState extends State<Categories> with TickerProviderStateMixin {
     var appVersion = await PackageInfo.fromPlatform();
     int version = int.parse(appVersion.buildNumber);
 
-    if (data['version'] > version) {
+    if (data['version'] < version) {
       showDialog(
         context: context,
         barrierDismissible: false,

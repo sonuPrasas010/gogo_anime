@@ -10,7 +10,8 @@ class UnityAds {
       gameId: '4960247',
       onComplete: () {
         log('Initialization Complete');
-        loadAd();
+        Future.delayed(Duration(minutes: 5),loadAd);
+      
       },
       onFailed: (error, message) =>
           log('Initialization Failed: $error $message'),

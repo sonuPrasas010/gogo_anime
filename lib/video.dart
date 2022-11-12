@@ -124,19 +124,16 @@ class _VideoPlayerState extends State<VideoPlayer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              
               child: inAppWeb.InAppWebView(
                 initialUrlRequest: inAppWeb.URLRequest(
                     url: Uri.parse(
                   widget.url,
                 )),
                 initialOptions: inAppWeb.InAppWebViewGroupOptions(
-                 
                   crossPlatform: inAppWeb.InAppWebViewOptions(
                     useShouldOverrideUrlLoading: true,
                     transparentBackground: true,
@@ -184,7 +181,6 @@ class _VideoPlayerState extends State<VideoPlayer> {
                   //                }     """));
                   // });
                 },
-                
                 onLoadStop: (controller, url) async {
                   _progress = null;
                 },

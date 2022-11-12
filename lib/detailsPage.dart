@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:new_gogo_anime/admob/unity_ads.dart';
 import 'package:new_gogo_anime/database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
- import 'choose_server.dart';
+import 'choose_server.dart';
 import 'consts.dart';
 import 'services/DataFetcher.dart';
 
@@ -31,6 +32,7 @@ class _DetailsPageState extends State<DetailsPage> {
   bool _isBookMarked = false;
   bool isBookMarking = false;
   String bookMarkMsg = "";
+  late SharedPreferences _preferences;
 
   @override
   void initState() {
@@ -113,7 +115,7 @@ class _DetailsPageState extends State<DetailsPage> {
           //       : Container(),
           // ],
           body: isLoading
-              ?const LinearProgressIndicator()
+              ? const LinearProgressIndicator()
               : _info.isEmpty
                   ? Center(
                       child: ElevatedButton.icon(
@@ -338,20 +340,28 @@ class _DetailsPageState extends State<DetailsPage> {
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) => ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                      primary: _toShowEpisodes[index]
-                                                  ['isSelected'] !=
-                                              null
+                                      primary: _preferences.getBool(
+                                                      _toShowEpisodes[index]
+                                                          ['link']) ==
+                                                  true ||
+                                              _toShowEpisodes[index]
+                                                      ['isSelected'] !=
+                                                  null
                                           ? Colors.green
                                           : Theme.of(context).primaryColor,
                                       padding: const EdgeInsets.all(0)),
                                   onPressed: () {
-                                   
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) => ChooseServer(
                                           _toShowEpisodes[index]['link'],
                                           _info['image'],
+                                          widget.title,
+                                          currentEpisode: _toShowEpisodes[index]
+                                              ['name'],
+                                          maxEpisode:
+                                              _info['episodesList'].length,
                                         ),
                                       ),
                                     );
@@ -402,6 +412,7 @@ class _DetailsPageState extends State<DetailsPage> {
       isLoading = true;
     });
     try {
+      _preferences = await SharedPreferences.getInstance();
       _controller.add(await _dataFetcher.fetchVideo(widget.link));
     } catch (e) {
       _controller.addError(e);
